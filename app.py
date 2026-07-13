@@ -20,46 +20,275 @@ st.set_page_config(
     page_title="CardVault",
     page_icon="🗃️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown(
     """
     <style>
-    .block-container {padding-top: 1rem; padding-bottom: 4rem; max-width: 1280px;}
-    div[data-testid="stMetric"] {
-        background:#f6f8fb;
-        border:1px solid #dfe5ee;
-        padding:.85rem;
-        border-radius:16px;
+    :root {
+      --navy:#081426;
+      --navy-2:#0f2038;
+      --red:#d91f35;
+      --text:#10213b;
+      --muted:#68758a;
+      --line:#e7ebf1;
+      --surface:#ffffff;
+      --soft:#f7f9fc;
+      --green:#1f9d55;
+      --gold:#d99a21;
+      --blue:#377dff;
+      --purple:#8b5cf6;
     }
-    .cv-card {
-        border:1px solid #dfe5ee;
-        border-radius:16px;
-        padding:12px;
-        background:white;
-        min-height:152px;
-        margin-bottom:10px;
-        box-shadow:0 1px 3px rgba(0,0,0,.04);
+
+    html, body, [class*="css"] {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .cv-title {font-weight:700; font-size:1rem; line-height:1.25;}
-    .cv-meta {color:#5b6574; font-size:.88rem; margin-top:4px;}
-    .cv-pill {
-        display:inline-block;
-        padding:3px 8px;
-        border-radius:999px;
-        font-size:.76rem;
-        font-weight:700;
-        margin-top:8px;
+
+    .stApp { background:#f7f9fc; }
+    .block-container { padding:1.1rem 1.4rem 3rem; max-width:1600px; }
+
+    section[data-testid="stSidebar"] {
+      background:linear-gradient(180deg,var(--navy),#0a172a 75%);
+      border-right:1px solid rgba(255,255,255,.05);
     }
-    .cv-owned {background:#e3f3e7;color:#1d6b34;}
-    .cv-need {background:#fde8eb;color:#9e0b18;}
-    .cv-incoming {background:#fff3cd;color:#7a5d00;}
-    .stButton > button {border-radius:12px;}
+
+    section[data-testid="stSidebar"] * { color:#f6f8fb; }
+
+    section[data-testid="stSidebar"] .stSelectbox label,
+    section[data-testid="stSidebar"] .stTextInput label,
+    section[data-testid="stSidebar"] .stTextArea label {
+      color:#c8d2e0 !important;
+    }
+
+    .brand {
+      font-size:1.55rem;
+      font-weight:850;
+      letter-spacing:-.03em;
+      padding:.4rem .15rem .9rem;
+    }
+
+    .brand span { color:var(--red); }
+
+    .profile-box {
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:16px;
+    }
+
+    .profile-title { font-weight:800; font-size:1rem; }
+    .profile-sub { color:#b6c2d2; font-size:.82rem; margin-top:2px; }
+    .profile-count {
+      display:inline-block;
+      margin-top:8px;
+      background:rgba(255,255,255,.11);
+      border-radius:999px;
+      padding:4px 9px;
+      font-size:.76rem;
+      font-weight:700;
+    }
+
+    div[data-testid="stRadio"] label {
+      background:transparent;
+      border-radius:12px;
+      padding:7px 9px;
+      margin:1px 0;
+    }
+
+    div[data-testid="stRadio"] label:hover {
+      background:rgba(255,255,255,.07);
+    }
+
+    .page-title {
+      font-size:2.05rem;
+      font-weight:850;
+      letter-spacing:-.035em;
+      color:var(--text);
+      margin-bottom:2px;
+    }
+
+    .page-subtitle {
+      color:var(--muted);
+      font-size:.94rem;
+      margin-bottom:1rem;
+    }
+
+    .metric-grid {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .metric-card {
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px 18px 16px;
+      box-shadow:0 4px 18px rgba(13,31,54,.04);
+      min-height:128px;
+    }
+
+    .metric-card.red { background:linear-gradient(135deg,#fff,#fff4f5); }
+    .metric-card.green { background:linear-gradient(135deg,#fff,#f1fff6); }
+    .metric-card.blue { background:linear-gradient(135deg,#fff,#f4f8ff); }
+    .metric-card.gold { background:linear-gradient(135deg,#fff,#fff9eb); }
+
+    .metric-label {
+      color:#506078;
+      font-size:.75rem;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:800;
+    }
+
+    .metric-value {
+      color:var(--text);
+      font-size:1.95rem;
+      line-height:1;
+      font-weight:850;
+      margin-top:12px;
+    }
+
+    .metric-foot {
+      color:var(--muted);
+      font-size:.82rem;
+      margin-top:9px;
+    }
+
+    .panel {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 4px 18px rgba(13,31,54,.04);
+      margin-bottom:16px;
+    }
+
+    .panel-title {
+      font-size:1rem;
+      font-weight:820;
+      color:var(--text);
+      margin-bottom:12px;
+    }
+
+    .set-row {
+      display:grid;
+      grid-template-columns:32px 1fr 70px 1.2fr 48px;
+      gap:10px;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid #f0f2f6;
+    }
+
+    .set-row:last-child { border-bottom:none; }
+
+    .rank {
+      width:26px;
+      height:26px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#f0f3f8;
+      color:#5c687b;
+      font-size:.78rem;
+      font-weight:800;
+    }
+
+    .progress-track {
+      height:7px;
+      border-radius:999px;
+      background:#edf0f4;
+      overflow:hidden;
+    }
+
+    .progress-fill {
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#23a35b,#57c784);
+    }
+
+    .summary-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid #f0f2f6;
+      color:#4e5d73;
+      font-size:.9rem;
+    }
+
+    .summary-row:last-child { border-bottom:none; }
+
+    .summary-count {
+      background:#f1f4f8;
+      color:#23334d;
+      padding:2px 8px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:.8rem;
+    }
+
+    .gallery-card {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      box-shadow:0 3px 14px rgba(13,31,54,.04);
+      margin-bottom:12px;
+    }
+
+    .gallery-title {
+      font-weight:800;
+      color:var(--text);
+      font-size:.94rem;
+      line-height:1.25;
+    }
+
+    .gallery-meta {
+      color:var(--muted);
+      font-size:.8rem;
+      margin-top:4px;
+    }
+
+    .pill {
+      display:inline-block;
+      border-radius:999px;
+      padding:4px 9px;
+      font-size:.72rem;
+      font-weight:800;
+      margin-top:8px;
+    }
+
+    .pill-owned { background:#e5f7eb; color:#1d7a43; }
+    .pill-need { background:#ffe9ec; color:#a71d2a; }
+    .pill-incoming { background:#fff4d5; color:#8a6712; }
+
+    div[data-testid="stButton"] button {
+      border-radius:12px;
+      font-weight:750;
+    }
+
+    div[data-testid="stDownloadButton"] button {
+      border-radius:12px;
+      font-weight:750;
+    }
+
+    @media (max-width:1000px) {
+      .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+
     @media (max-width:700px) {
-      .block-container {padding-left:.55rem; padding-right:.55rem;}
-      h1 {font-size:1.5rem!important;}
-      div[data-testid="stHorizontalBlock"] {gap:.45rem;}
+      .block-container { padding:.65rem .6rem 2rem; }
+      .page-title { font-size:1.55rem; }
+      .metric-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .metric-card { padding:14px; min-height:105px; }
+      .metric-value { font-size:1.45rem; }
+      .set-row { grid-template-columns:28px 1fr 58px; }
+      .set-row .hide-mobile { display:none; }
     }
     </style>
     """,
@@ -102,8 +331,8 @@ def require_login(client):
     if st.session_state.get("user_id"):
         return
 
-    st.title("🗃️ CardVault")
-    st.caption("Your private sports-card collection manager.")
+    st.markdown('<div class="page-title">🗃️ CardVault</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Your private sports-card collection manager.</div>', unsafe_allow_html=True)
 
     sign_in, sign_up = st.tabs(["Sign in", "Create account"])
 
@@ -151,6 +380,7 @@ def ensure_default_collection(client, user_id: str) -> str:
         .limit(1)
         .execute()
     )
+
     if result.data:
         collection_id = result.data[0]["id"]
     else:
@@ -209,10 +439,7 @@ def upload_image(client, user_id: str, uploaded_file) -> str:
     client.storage.from_("card-images").upload(
         path=path,
         file=uploaded_file.getvalue(),
-        file_options={
-            "content-type": uploaded_file.type,
-            "upsert": "false",
-        },
+        file_options={"content-type": uploaded_file.type, "upsert": "false"},
     )
     return path
 
@@ -237,9 +464,11 @@ def normalize_import(df: pd.DataFrame, user_id: str, collection_id: str) -> list
         "parallel": "variation",
         "storage": "storage_location",
     }
+
     df = df.rename(
         columns={c: aliases.get(c.strip().lower(), c.strip().lower()) for c in df.columns}
     )
+
     if "year" not in df.columns or "set_name" not in df.columns:
         raise ValueError("CSV must include year and set_name columns.")
 
@@ -251,6 +480,7 @@ def normalize_import(df: pd.DataFrame, user_id: str, collection_id: str) -> list
         "date_acquired": "", "seller": "", "storage_location": "",
         "image_path": "", "source_url": "", "favorite": False, "notes": "",
     }
+
     for col, default in defaults.items():
         if col not in df.columns:
             df[col] = default
@@ -281,33 +511,65 @@ def normalize_import(df: pd.DataFrame, user_id: str, collection_id: str) -> list
             "favorite": bool(row["favorite"]),
             "notes": str(row["notes"]).strip(),
         })
+
     return records
+
+
+def build_year_progress(cards: pd.DataFrame) -> pd.DataFrame:
+    if cards.empty:
+        return pd.DataFrame(columns=["Year", "Owned", "Total", "Complete"])
+
+    result = (
+        cards.assign(_owned=(cards["status"] == "Owned").astype(int))
+        .groupby("year", as_index=False)
+        .agg(Owned=("_owned", "sum"), Total=("id", "count"))
+        .rename(columns={"year": "Year"})
+    )
+    result["Complete"] = result["Owned"] / result["Total"] * 100
+    return result.sort_values("Year")
+
+
+def build_set_progress(cards: pd.DataFrame) -> pd.DataFrame:
+    if cards.empty:
+        return pd.DataFrame(columns=["Year", "Set", "Owned", "Total", "Complete"])
+
+    result = (
+        cards.assign(_owned=(cards["status"] == "Owned").astype(int))
+        .groupby(["year", "set_name"], as_index=False)
+        .agg(Owned=("_owned", "sum"), Total=("id", "count"))
+        .rename(columns={"year": "Year", "set_name": "Set"})
+    )
+    result["Complete"] = result["Owned"] / result["Total"] * 100
+    return result.sort_values(["Complete", "Total"], ascending=[False, False])
 
 
 def apply_filters(df: pd.DataFrame, *, need_only: bool = False) -> pd.DataFrame:
     filtered = df.copy()
+
     if need_only:
         filtered = filtered[~filtered["status"].isin(["Owned", "Incoming", "Not Chasing"])]
 
     years = sorted(filtered["year"].dropna().unique().tolist(), reverse=True) if not filtered.empty else []
+    sets = sorted(filtered["set_name"].dropna().astype(str).unique().tolist()) if not filtered.empty else []
     categories = sorted(filtered["category"].dropna().astype(str).unique().tolist()) if not filtered.empty else []
-    priorities = sorted(filtered["priority"].dropna().astype(str).unique().tolist()) if not filtered.empty else []
 
     f1, f2, f3 = st.columns(3)
     selected_years = f1.multiselect("Year", years)
-    selected_categories = f2.multiselect("Category", categories)
-    selected_priorities = f3.multiselect("Priority", priorities)
+    selected_sets = f2.multiselect("Set", sets)
+    selected_categories = f3.multiselect("Category", categories)
+
     search = st.text_input("Search set, card number, parallel, or notes")
     favorites_only = st.toggle("Favorites only")
 
     if selected_years:
         filtered = filtered[filtered["year"].isin(selected_years)]
+    if selected_sets:
+        filtered = filtered[filtered["set_name"].isin(selected_sets)]
     if selected_categories:
         filtered = filtered[filtered["category"].isin(selected_categories)]
-    if selected_priorities:
-        filtered = filtered[filtered["priority"].isin(selected_priorities)]
     if favorites_only:
         filtered = filtered[filtered["favorite"] == True]
+
     if search and not filtered.empty:
         cols = ["set_name", "card_number", "card_name", "parallel", "notes"]
         mask = filtered[cols].fillna("").astype(str).apply(
@@ -318,101 +580,123 @@ def apply_filters(df: pd.DataFrame, *, need_only: bool = False) -> pd.DataFrame:
     return filtered
 
 
-def gallery_card(client, row, *, quick_owned: bool = False):
-    status = row.get("status") or "Need"
-    pill_class = {
-        "Owned": "cv-owned",
-        "Incoming": "cv-incoming",
-    }.get(status, "cv-need")
-
+def render_gallery_card(client, row, quick_owned: bool = False):
     image = signed_url(client, row.get("image_path", "") or "")
+
     if image:
         st.image(image, use_container_width=True)
     else:
         st.markdown(
             """
-            <div style="height:150px;border:1px dashed #c8d0dc;border-radius:12px;
-            display:flex;align-items:center;justify-content:center;color:#8893a2;
-            margin-bottom:8px;">No image</div>
+            <div style="height:170px;border:1px dashed #d6dce5;border-radius:14px;
+            display:flex;align-items:center;justify-content:center;color:#8792a3;
+            background:#fafbfd;margin-bottom:9px;">No image</div>
             """,
             unsafe_allow_html=True,
         )
 
-    card_num = row.get("card_number") or ""
+    status = row.get("status") or "Need"
+    pill_class = {
+        "Owned": "pill-owned",
+        "Incoming": "pill-incoming",
+    }.get(status, "pill-need")
+
+    card_number = row.get("card_number") or ""
     parallel = row.get("parallel") or ""
-    subtitle = " • ".join(x for x in [card_num and f"#{card_num}", parallel, row.get("category") or ""] if x)
+    meta = " • ".join(
+        item for item in [card_number and f"#{card_number}", parallel, row.get("category") or ""]
+        if item
+    )
 
     st.markdown(
         f"""
-        <div class="cv-card">
-          <div class="cv-title">{int(row['year'])} {row['set_name']}</div>
-          <div class="cv-meta">{subtitle}</div>
-          <span class="cv-pill {pill_class}">{status}</span>
+        <div class="gallery-card">
+          <div class="gallery-title">{int(row['year'])} {row['set_name']}</div>
+          <div class="gallery-meta">{meta}</div>
+          <span class="pill {pill_class}">{status}</span>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     if quick_owned and status != "Owned":
-        if st.button("Mark owned", key=f"quick_owned_{row['id']}", use_container_width=True):
+        if st.button("Mark Owned", key=f"quick_{row['id']}", use_container_width=True):
             client.table("cards").update({
                 "status": "Owned",
                 "date_acquired": date.today().isoformat(),
             }).eq("id", row["id"]).execute()
             st.rerun()
 
-    with st.expander("Details"):
+    with st.expander("Edit"):
         new_status = st.selectbox(
             "Status",
             STATUS_OPTIONS,
             index=STATUS_OPTIONS.index(status) if status in STATUS_OPTIONS else 0,
             key=f"status_{row['id']}",
         )
+
         favorite = st.toggle(
             "Favorite",
             bool(row.get("favorite", False)),
             key=f"favorite_{row['id']}",
         )
+
         c1, c2 = st.columns(2)
-        price_paid = c1.number_input(
+        paid = c1.number_input(
             "Price paid",
             min_value=0.0,
             value=float(row.get("price_paid") or 0),
             step=.25,
             key=f"paid_{row['id']}",
         )
-        estimated_value = c2.number_input(
+        value = c2.number_input(
             "Estimated value",
             min_value=0.0,
             value=float(row.get("estimated_value") or 0),
             step=.25,
             key=f"value_{row['id']}",
         )
+
         storage = st.text_input(
             "Storage",
             value=row.get("storage_location") or "",
             key=f"storage_{row['id']}",
         )
+
         notes = st.text_area(
             "Notes",
             value=row.get("notes") or "",
             key=f"notes_{row['id']}",
         )
 
+        photo = st.file_uploader(
+            "Add/replace photo",
+            type=["png", "jpg", "jpeg", "webp"],
+            key=f"photo_{row['id']}",
+        )
+
         s1, s2 = st.columns(2)
+
         if s1.button("Save", key=f"save_{row['id']}", use_container_width=True):
+            image_path = row.get("image_path") or ""
+            if photo:
+                image_path = upload_image(client, st.session_state.user_id, photo)
+
             acquired = row.get("date_acquired") or None
             if new_status == "Owned" and not acquired:
                 acquired = date.today().isoformat()
+
             client.table("cards").update({
                 "status": new_status,
                 "favorite": favorite,
-                "price_paid": price_paid,
-                "estimated_value": estimated_value,
+                "price_paid": paid,
+                "estimated_value": value,
                 "storage_location": storage,
                 "notes": notes,
+                "image_path": image_path,
                 "date_acquired": acquired,
             }).eq("id", row["id"]).execute()
+
             st.rerun()
 
         if s2.button("Delete", key=f"delete_{row['id']}", use_container_width=True):
@@ -428,6 +712,7 @@ user_id = st.session_state.user_id
 user_email = st.session_state.user_email
 
 ensure_default_collection(client, user_id)
+
 collections = fetch_collections(client, user_id)
 if collections.empty:
     st.error("No collection could be loaded.")
@@ -436,12 +721,46 @@ if collections.empty:
 collection_map = dict(zip(collections["name"], collections["id"]))
 collection_names = list(collection_map.keys())
 
-st.title("🗃️ CardVault")
-st.caption(f"Signed in as {user_email}")
-
 with st.sidebar:
-    selected_name = st.selectbox("Active collection", collection_names)
+    st.markdown('<div class="brand">Card<span>Vault</span></div>', unsafe_allow_html=True)
+
+    selected_name = st.selectbox(
+        "Collection",
+        collection_names,
+        label_visibility="collapsed",
+    )
     selected_collection_id = collection_map[selected_name]
+    selected_collection = collections[collections["id"] == selected_collection_id].iloc[0]
+
+    cards = fetch_cards(client, selected_collection_id)
+
+    st.markdown(
+        f"""
+        <div class="profile-box">
+          <div class="profile-title">{selected_collection.get('player_name') or selected_name}</div>
+          <div class="profile-sub">{selected_collection.get('team') or ''}</div>
+          <span class="profile-count">{len(cards)} cards</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    page = st.radio(
+        "Navigation",
+        [
+            "Dashboard",
+            "Collection",
+            "Set Progress",
+            "Need It",
+            "Add Card",
+            "Import",
+            "Analytics",
+            "Backup",
+        ],
+        label_visibility="collapsed",
+    )
+
+    st.divider()
 
     with st.expander("Create collection"):
         with st.form("new_collection_form"):
@@ -450,7 +769,8 @@ with st.sidebar:
             team = st.text_input("Team")
             player_name = st.text_input("Player")
             description = st.text_area("Description")
-            create = st.form_submit_button("Create collection", use_container_width=True)
+            create = st.form_submit_button("Create", use_container_width=True)
+
         if create and new_name.strip():
             client.table("collections").insert({
                 "user_id": user_id,
@@ -467,98 +787,270 @@ with st.sidebar:
             client.auth.sign_out()
         except Exception:
             pass
+
         for key in ("access_token", "refresh_token", "user_id", "user_email"):
             st.session_state.pop(key, None)
+
         st.rerun()
 
-page = st.segmented_control(
-    "View",
-    ["Dashboard", "Gallery", "Need List", "Add Card", "Import", "Backup"],
-    default="Dashboard",
-    label_visibility="collapsed",
-)
-
-cards = fetch_cards(client, selected_collection_id)
 
 if page == "Dashboard":
+    st.markdown('<div class="page-title">↗ Dashboard</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="page-subtitle">Your {selected_collection.get("player_name") or selected_name} collection at a glance.</div>',
+        unsafe_allow_html=True,
+    )
+
     if cards.empty:
         st.info("This collection is empty.")
     else:
         total = len(cards)
         owned = int((cards["status"] == "Owned").sum())
         need = int((cards["status"] == "Need").sum())
-        incoming = int((cards["status"] == "Incoming").sum())
         spent = float(pd.to_numeric(cards["price_paid"], errors="coerce").fillna(0).sum())
         value = float(pd.to_numeric(cards["estimated_value"], errors="coerce").fillna(0).sum())
+        set_count = int(cards["set_name"].nunique())
+        completion = (owned / total * 100) if total else 0
 
-        a, b, c, d = st.columns(4)
-        a.metric("Owned", f"{owned}/{total}", f"{owned/total*100:.1f}%")
-        b.metric("Need", need)
-        c.metric("Incoming", incoming)
-        d.metric("Est. Value", f"${value:,.2f}", f"${value-spent:,.2f}")
-
-        st.subheader("Progress by year")
-        progress = (
-            cards.assign(_owned=(cards["status"] == "Owned").astype(int))
-            .groupby("year", as_index=False)
-            .agg(Owned=("_owned", "sum"), Total=("id", "count"))
+        st.markdown(
+            f"""
+            <div class="metric-grid">
+              <div class="metric-card red">
+                <div class="metric-label">Total Cards</div>
+                <div class="metric-value">{total}</div>
+                <div class="metric-foot">{owned} owned</div>
+              </div>
+              <div class="metric-card green">
+                <div class="metric-label">Collection Value</div>
+                <div class="metric-value">${value:,.2f}</div>
+                <div class="metric-foot">${spent:,.2f} invested</div>
+              </div>
+              <div class="metric-card blue">
+                <div class="metric-label">Sets</div>
+                <div class="metric-value">{set_count}</div>
+                <div class="metric-foot">tracked products</div>
+              </div>
+              <div class="metric-card gold">
+                <div class="metric-label">Overall Progress</div>
+                <div class="metric-value">{completion:.1f}%</div>
+                <div class="metric-foot">{need} cards needed</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        progress["Completion %"] = progress["Owned"] / progress["Total"] * 100
+
+        left, right = st.columns([1.35, 1])
+
+        with left:
+            st.markdown('<div class="panel"><div class="panel-title">Progress by Year</div>', unsafe_allow_html=True)
+
+            year_progress = build_year_progress(cards)
+            st.dataframe(
+                year_progress,
+                hide_index=True,
+                use_container_width=True,
+                column_config={
+                    "Complete": st.column_config.ProgressColumn(
+                        "Complete",
+                        min_value=0,
+                        max_value=100,
+                        format="%.1f%%",
+                    )
+                },
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with right:
+            st.markdown('<div class="panel"><div class="panel-title">Sets Closest to Completion</div>', unsafe_allow_html=True)
+
+            set_progress = build_set_progress(cards)
+            for idx, row in enumerate(set_progress.head(5).itertuples(), start=1):
+                st.markdown(
+                    f"""
+                    <div class="set-row">
+                      <div class="rank">{idx}</div>
+                      <div style="font-weight:750;color:#22314b;">{int(row.Year)} {row.Set}</div>
+                      <div style="color:#5f6d82;font-size:.82rem;">{row.Owned}/{row.Total}</div>
+                      <div class="progress-track hide-mobile">
+                        <div class="progress-fill" style="width:{row.Complete:.1f}%"></div>
+                      </div>
+                      <div style="font-weight:800;color:#263750;font-size:.82rem;">{row.Complete:.0f}%</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        lower_left, lower_right = st.columns([1.6, .8])
+
+        with lower_left:
+            st.markdown('<div class="panel"><div class="panel-title">Recent Added</div>', unsafe_allow_html=True)
+
+            recent = cards.sort_values(
+                ["created_at", "updated_at"],
+                ascending=False,
+            ).head(5)
+
+            cols = st.columns(5)
+
+            for col, (_, row) in zip(cols, recent.iterrows()):
+                with col:
+                    image = signed_url(client, row.get("image_path", "") or "")
+
+                    if image:
+                        st.image(image, use_container_width=True)
+                    else:
+                        st.markdown(
+                            """
+                            <div style="height:135px;border:1px dashed #d8dee7;border-radius:12px;
+                            display:flex;align-items:center;justify-content:center;color:#8a95a6;
+                            background:#fafbfd;">No image</div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                    st.markdown(
+                        f"""
+                        <div style="font-weight:750;font-size:.8rem;color:#23324a;margin-top:7px;">
+                          {int(row['year'])} {row['set_name']}
+                        </div>
+                        <div style="color:#7a8798;font-size:.74rem;">
+                          #{row.get('card_number') or ''}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with lower_right:
+            st.markdown('<div class="panel"><div class="panel-title">Collection Summary</div>', unsafe_allow_html=True)
+
+            category_counts = cards["category"].fillna("Other").value_counts()
+
+            for label in ["Base", "Autograph", "Relic", "Relic/Autograph", "Numbered", "Parallel", "Insert"]:
+                count = int(category_counts.get(label, 0))
+                st.markdown(
+                    f"""
+                    <div class="summary-row">
+                      <span>{label}</span>
+                      <span class="summary-count">{count}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+
+elif page == "Collection":
+    st.markdown('<div class="page-title">Collection</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Browse and manage your complete checklist.</div>', unsafe_allow_html=True)
+
+    filtered = apply_filters(cards)
+    st.caption(f"{len(filtered)} cards")
+
+    for start in range(0, len(filtered), 4):
+        cols = st.columns(4)
+        chunk = filtered.iloc[start:start + 4]
+
+        for col, (_, row) in zip(cols, chunk.iterrows()):
+            with col:
+                render_gallery_card(client, row)
+
+
+elif page == "Set Progress":
+    st.markdown('<div class="page-title">Set Progress</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Track completion by product and year.</div>', unsafe_allow_html=True)
+
+    progress = build_set_progress(cards)
+
+    if progress.empty:
+        st.info("No cards yet.")
+    else:
+        years = sorted(progress["Year"].unique().tolist(), reverse=True)
+        selected_years = st.multiselect("Year", years)
+
+        if selected_years:
+            progress = progress[progress["Year"].isin(selected_years)]
+
         st.dataframe(
             progress,
             hide_index=True,
             use_container_width=True,
             column_config={
-                "Completion %": st.column_config.ProgressColumn(
-                    "Completion", min_value=0, max_value=100, format="%.1f%%"
+                "Complete": st.column_config.ProgressColumn(
+                    "Complete",
+                    min_value=0,
+                    max_value=100,
+                    format="%.1f%%",
                 )
             },
         )
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.subheader("By category")
-            category_counts = cards.groupby("category", as_index=False).size().rename(columns={"size": "Cards"})
-            st.bar_chart(category_counts.set_index("category"))
-        with c2:
-            st.subheader("Recent pickups")
-            recent = cards[cards["status"] == "Owned"].sort_values(
-                ["date_acquired", "updated_at"], ascending=False
-            ).head(8)
-            if recent.empty:
-                st.caption("No owned cards yet.")
-            else:
-                st.dataframe(
-                    recent[["year", "set_name", "card_number", "date_acquired"]],
-                    hide_index=True,
-                    use_container_width=True,
+        choices = [""] + [f"{int(r.Year)} — {r.Set}" for r in progress.itertuples()]
+        selected = st.selectbox("Open a set", choices)
+
+        if selected:
+            year_text, set_name = selected.split(" — ", 1)
+
+            set_cards = cards[
+                (cards["year"] == int(year_text))
+                & (cards["set_name"] == set_name)
+            ]
+
+            st.caption(f"{len(set_cards)} checklist entries")
+
+            for _, row in set_cards.iterrows():
+                icon = "✅" if row["status"] == "Owned" else "⬜"
+                st.write(
+                    f"{icon} #{row.get('card_number') or ''} "
+                    f"{row.get('parallel') or row.get('card_name') or row.get('category')}"
                 )
 
-elif page in ("Gallery", "Need List"):
-    filtered = apply_filters(cards, need_only=(page == "Need List"))
-    st.caption(f"{len(filtered)} cards")
 
-    columns_per_row = 2 if page == "Need List" else 3
-    for start in range(0, len(filtered), columns_per_row):
-        cols = st.columns(columns_per_row)
-        chunk = filtered.iloc[start:start + columns_per_row]
+elif page == "Need It":
+    st.markdown('<div class="page-title">Need It</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Shopping mode for card shows, shops, and online browsing.</div>', unsafe_allow_html=True)
+
+    filtered = apply_filters(cards, need_only=True)
+    st.caption(f"{len(filtered)} cards needed")
+
+    for start in range(0, len(filtered), 3):
+        cols = st.columns(3)
+        chunk = filtered.iloc[start:start + 3]
+
         for col, (_, row) in zip(cols, chunk.iterrows()):
             with col:
-                gallery_card(client, row, quick_owned=(page == "Need List"))
+                render_gallery_card(client, row, quick_owned=True)
+
 
 elif page == "Add Card":
+    st.markdown('<div class="page-title">Add Card</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Create a new checklist entry or add a pickup manually.</div>', unsafe_allow_html=True)
+
     with st.form("add_card_form", clear_on_submit=True):
-        year = st.number_input("Year", min_value=1900, max_value=2100, value=2026)
-        set_name = st.text_input("Set *")
-        card_number = st.text_input("Card number")
-        card_name = st.text_input("Card name")
-        category = st.selectbox("Category", CATEGORY_OPTIONS)
-        parallel = st.text_input("Parallel")
-        serial_number = st.text_input("Serial number")
-        status = st.selectbox("Status", STATUS_OPTIONS[:-1])
+        c1, c2 = st.columns(2)
+        year = c1.number_input("Year", min_value=1900, max_value=2100, value=2026)
+        set_name = c2.text_input("Set *")
+
+        c3, c4 = st.columns(2)
+        card_number = c3.text_input("Card number")
+        card_name = c4.text_input("Card name")
+
+        c5, c6 = st.columns(2)
+        category = c5.selectbox("Category", CATEGORY_OPTIONS)
+        parallel = c6.text_input("Parallel")
+
+        c7, c8 = st.columns(2)
+        serial_number = c7.text_input("Serial number")
+        status = c8.selectbox("Status", STATUS_OPTIONS[:-1])
+
         priority = st.selectbox("Priority", PRIORITY_OPTIONS)
         photo = st.file_uploader("Photo", type=["png", "jpg", "jpeg", "webp"])
         notes = st.text_area("Notes")
+
         add = st.form_submit_button("Add card", use_container_width=True)
 
     if add:
@@ -566,6 +1058,7 @@ elif page == "Add Card":
             st.error("Set is required.")
         else:
             image_path = upload_image(client, user_id, photo) if photo else ""
+
             client.table("cards").insert({
                 "user_id": user_id,
                 "collection_id": selected_collection_id,
@@ -582,11 +1075,16 @@ elif page == "Add Card":
                 "notes": notes.strip(),
                 "date_acquired": date.today().isoformat() if status == "Owned" else None,
             }).execute()
+
             st.success("Card added.")
 
+
 elif page == "Import":
-    st.subheader("Import checklist CSV")
+    st.markdown('<div class="page-title">Import</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Upload an import-ready CSV checklist.</div>', unsafe_allow_html=True)
+
     uploaded = st.file_uploader("Choose CSV", type=["csv"])
+
     if uploaded:
         preview = pd.read_csv(uploaded)
         st.dataframe(preview.head(25), use_container_width=True)
@@ -595,16 +1093,21 @@ elif page == "Import":
         if st.button("Import checklist", use_container_width=True):
             try:
                 records = normalize_import(preview, user_id, selected_collection_id)
+
                 existing = set()
+
                 if not cards.empty:
-                    existing = set(zip(
-                        cards["year"].astype(str),
-                        cards["set_name"].fillna("").astype(str).str.lower(),
-                        cards["card_number"].fillna("").astype(str).str.lower(),
-                        cards["parallel"].fillna("").astype(str).str.lower(),
-                    ))
+                    existing = set(
+                        zip(
+                            cards["year"].astype(str),
+                            cards["set_name"].fillna("").astype(str).str.lower(),
+                            cards["card_number"].fillna("").astype(str).str.lower(),
+                            cards["parallel"].fillna("").astype(str).str.lower(),
+                        )
+                    )
 
                 new_records = []
+
                 for record in records:
                     key = (
                         str(record["year"]),
@@ -612,25 +1115,62 @@ elif page == "Import":
                         record["card_number"].lower(),
                         record["parallel"].lower(),
                     )
+
                     if key not in existing:
                         new_records.append(record)
                         existing.add(key)
 
                 for start in range(0, len(new_records), 100):
-                    client.table("cards").insert(new_records[start:start + 100]).execute()
+                    client.table("cards").insert(
+                        new_records[start:start + 100]
+                    ).execute()
 
                 st.success(
                     f"Imported {len(new_records)} cards; "
                     f"skipped {len(records) - len(new_records)} duplicates."
                 )
+
             except Exception as exc:
                 st.error(f"Import failed: {exc}")
 
+
+elif page == "Analytics":
+    st.markdown('<div class="page-title">Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Break down your collection by category, year, and status.</div>', unsafe_allow_html=True)
+
+    if cards.empty:
+        st.info("No cards yet.")
+    else:
+        a, b = st.columns(2)
+
+        with a:
+            st.subheader("Cards by year")
+            year_counts = cards.groupby("year").size()
+            st.bar_chart(year_counts)
+
+        with b:
+            st.subheader("Cards by category")
+            category_counts = cards["category"].fillna("Other").value_counts()
+            st.bar_chart(category_counts)
+
+        st.subheader("Status breakdown")
+        status_counts = cards["status"].fillna("Unknown").value_counts()
+        st.dataframe(
+            status_counts.rename_axis("Status").reset_index(name="Cards"),
+            hide_index=True,
+            use_container_width=True,
+        )
+
+
 elif page == "Backup":
+    st.markdown('<div class="page-title">Backup / Export</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Download a complete CSV backup of the active collection.</div>', unsafe_allow_html=True)
+
     if cards.empty:
         st.info("Nothing to export.")
     else:
         csv_data = cards.to_csv(index=False).encode("utf-8")
+
         st.download_button(
             "Download collection CSV",
             csv_data,
