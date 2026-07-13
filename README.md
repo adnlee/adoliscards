@@ -1,35 +1,26 @@
 
-# CardVault V3 — Dashboard UI
-
-This update redesigns the Streamlit app to match the polished dashboard concept.
+# CardVault V3.1 — Visual Polish
 
 ## Install
 
 1. Back up your current `adoliscards` folder.
 2. Extract this ZIP.
-3. Copy the files into your existing GitHub repository folder.
+3. Copy the files into the existing GitHub repository folder.
 4. Replace matching files.
-5. Keep your existing `.streamlit/secrets.toml`.
+5. Keep `.streamlit/secrets.toml`.
 6. No Supabase migration is required.
-7. Run locally:
+7. Commit and push in GitHub Desktop.
+8. Streamlit Cloud will redeploy automatically.
 
-   ```
-   py -m pip install -r requirements.txt
-   py -m streamlit run app.py
-   ```
+## Added
 
-8. Commit and push in GitHub Desktop. Streamlit Cloud should redeploy automatically.
-
-## Included
-
-- Dark CardVault sidebar
-- Dashboard metric cards
-- Progress-by-year panel
-- Sets closest to completion
-- Recent cards panel
-- Collection summary
-- Gallery-style collection page
-- Mobile Need It shopping mode
-- Set progress page
-- Analytics page
-- Existing Supabase data preserved
+- Larger CardVault branding
+- Sidebar icons
+- Stronger metric-card icons
+- Premium card placeholders
+- Visual card tiles
+- Auto/relic/numbered/parallel badges
+- Improved search and filters
+- Better Set Progress drill-down
+- Better Need It shopping cards
+- Cleaner mobile presentation
