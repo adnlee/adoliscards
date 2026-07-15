@@ -1,5 +1,16 @@
+# CardVault 4.0
 
-# CardVault V3.1 — Visual Polish
+A polished Streamlit collection manager for an Adolis García Texas Rangers
+sports-card collection. CardVault uses the existing Supabase schema and never
+creates placeholder collection data.
+
+## Architecture
+
+- `app.py` — session orchestration and routing
+- `components/` — reusable visual components
+- `pages/` — page-level renderers
+- `utils/` — database, statistics, filters, imports, and diagnostics
+- `assets/` — shared visual theme
 
 ## Install
 
