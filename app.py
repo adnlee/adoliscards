@@ -73,6 +73,9 @@ counts = {collection_id: len(frame) for collection_id, frame in collection_cards
 page, collection_id = sidebar(client, collections, counts, user_id)
 cards = collection_cards[collection_id]
 collection_name = str(collections.loc[collections["id"].astype(str).eq(collection_id), "name"].iloc[0])
+deleted_toast = st.session_state.pop("_cardvault_deleted_toast", None)
+if deleted_toast:
+    st.toast(deleted_toast, icon="✅")
 
 routes = {
     "Dashboard": lambda: dashboard.render(client, cards),

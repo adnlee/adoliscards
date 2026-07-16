@@ -13,7 +13,7 @@ from components.page_title import page_title
 from utils.database import insert_card, upload_image
 from utils.filters import collection_filters
 from utils.filters import searchable_mask
-from utils.imports import normalize_import
+from utils.imports import normalize_import, partition_import_records
 from utils.stats import set_progress
 
 STATUS_OPTIONS = ["Need", "Owned", "Incoming"]
@@ -113,15 +113,18 @@ def import_page(client: Any, cards: pd.DataFrame, user_id: str, collection_id: s
     if st.button("Import checklist", use_container_width=True):
         try:
             records = normalize_import(frame, user_id, collection_id)
-            existing = set(zip(cards.get("year", pd.Series(dtype=str)).astype(str), cards.get("set_name", pd.Series(dtype=str)).fillna("").str.lower(), cards.get("card_number", pd.Series(dtype=str)).fillna("").str.lower(), cards.get("parallel", pd.Series(dtype=str)).fillna("").str.lower()))
-            fresh = []
-            for record in records:
-                key = (str(record["year"]), record["set_name"].lower(), record["card_number"].lower(), record["parallel"].lower())
-                if key not in existing:
-                    fresh.append(record); existing.add(key)
+            fresh, duplicates = partition_import_records(records, cards)
             for start in range(0, len(fresh), 100):
                 client.table("cards").insert(fresh[start:start + 100]).execute()
-            st.success(f"Imported {len(fresh)} cards; skipped {len(records)-len(fresh)} duplicates.")
+            for _candidate, existing in duplicates:
+                existing_label = (
+                    f"{existing.get('year', '')} {existing.get('manufacturer', '')} "
+                    f"{existing.get('set_name', '')} #{existing.get('card_number', '')} "
+                    f"{existing.get('parallel') or existing.get('variation') or 'Base'}"
+                    f"{f' /{existing.get('serial_number')}' if existing.get('serial_number') else ''}"
+                )
+                st.warning(f"Duplicate detected: {existing_label.strip()} already exists. Insert skipped.")
+            st.success(f"Imported {len(fresh)} cards; skipped {len(duplicates)} duplicates.")
         except Exception as exc:
             st.error(f"Import failed: {exc}")
 

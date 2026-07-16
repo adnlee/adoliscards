@@ -9,7 +9,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from utils.database import signed_url, update_card, upload_image
+from utils.database import delete_card, signed_url, update_card, upload_image
 from utils.formatting import money, text
 
 STATUS_OPTIONS = ["Need", "Owned", "Incoming", "Not Chasing"]
@@ -56,6 +56,23 @@ def _date_value(value: Any) -> date | None:
         return pd.to_datetime(value).date()
     except (TypeError, ValueError):
         return None
+
+
+@st.dialog("Delete Card")
+def _delete_confirmation(client: Any, card_id: str, image_path: str, card_label: str) -> None:
+    """Require an explicit destructive confirmation before deleting a card."""
+    st.warning(f"Delete {card_label}? This cannot be undone.")
+    confirm, cancel = st.columns(2)
+    if confirm.button("Delete permanently", type="primary", use_container_width=True, key=f"confirm_delete_{card_id}"):
+        try:
+            delete_card(client, card_id, image_path)
+        except Exception as exc:
+            st.error(f"Card could not be deleted: {exc}")
+            return
+        st.session_state["_cardvault_deleted_toast"] = f"Deleted {card_label}."
+        st.rerun()
+    if cancel.button("Cancel", use_container_width=True, key=f"cancel_delete_{card_id}"):
+        st.rerun()
 
 
 def card_tile(client: Any, row: pd.Series, *, compact: bool = False, quick_owned: bool = False, all_cards: pd.DataFrame | None = None) -> None:
@@ -123,7 +140,7 @@ def card_detail(client: Any, row: pd.Series, *, all_cards: pd.DataFrame | None =
         notes = st.text_area("Notes", value=str(row.get("notes") or ""))
         favorite = st.toggle("Favorite", value=bool(row.get("favorite")))
         image = st.file_uploader("Upload or replace front image", type=["jpg", "jpeg", "png", "webp"])
-        saved = st.form_submit_button("Save card details", use_container_width=True)
+        saved = st.form_submit_button("Save Card", use_container_width=True)
     if saved:
         if not set_name.strip():
             st.error("Set name cannot be blank.")
@@ -144,6 +161,10 @@ def card_detail(client: Any, row: pd.Series, *, all_cards: pd.DataFrame | None =
             })
             st.success("Card details saved.")
             st.rerun()
+
+    if st.button("Delete Card", type="primary", use_container_width=True, key=f"delete_{card_id}"):
+        label = f"{text(row.get('year'))} {text(row.get('set_name'))} #{text(row.get('card_number'))}"
+        _delete_confirmation(client, card_id, str(row.get("image_path") or ""), label)
 
     if all_cards is not None and not all_cards.empty:
         related = all_cards[

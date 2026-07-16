@@ -102,6 +102,13 @@ def update_card(client: Client, card_id: str, values: dict[str, Any]) -> None:
     client.table("cards").update(values).eq("id", card_id).execute()
 
 
+def delete_card(client: Client, card_id: str, image_path: str | None = None) -> None:
+    """Delete one card by ID, then remove its now-unreferenced stored image."""
+    client.table("cards").delete().eq("id", card_id).execute()
+    if image_path:
+        client.storage.from_("card-images").remove([image_path])
+
+
 def insert_card(client: Client, values: dict[str, Any]) -> None:
     client.table("cards").insert(values).execute()
 
