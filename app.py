@@ -11,7 +11,7 @@ from pathlib import Path
 import streamlit as st
 
 from components.sidebar import sidebar
-from pages import collection, dashboard, database_health, legacy
+from pages import checklist_audit, collection, dashboard, database_health, legacy
 from utils.database import (
     ensure_default_collection,
     fetch_cards,
@@ -21,7 +21,7 @@ from utils.database import (
     save_session,
 )
 
-st.set_page_config(page_title="CardVault 4.0", page_icon="🗃️", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="CardVault 4.2", page_icon="🗃️", layout="wide", initial_sidebar_state="expanded")
 st.markdown(f"<style>{Path('assets/styles.css').read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 
@@ -29,7 +29,7 @@ def require_login(client) -> None:
     """Preserve password authentication and registration from CardVault 3.1."""
     if st.session_state.get("user_id"):
         return
-    st.markdown('<div style="max-width:520px;margin:8vh auto 1rem"><div class="cv-brand"><b style="color:#14233b">Card<span>Vault</span></b><small>COLLECTION INTELLIGENCE · 4.0</small></div></div>', unsafe_allow_html=True)
+    st.markdown('<div style="max-width:520px;margin:8vh auto 1rem"><div class="cv-brand"><b style="color:#14233b">Card<span>Vault</span></b><small>COLLECTION INTELLIGENCE · 4.2</small></div></div>', unsafe_allow_html=True)
     sign_in, sign_up = st.tabs(["Sign in", "Create account"])
     with sign_in:
         with st.form("login"):
@@ -82,6 +82,7 @@ routes = {
     "Purchases": lambda: legacy.purchases_page(client, cards),
     "Add Card": lambda: legacy.add_card_page(client, user_id, collection_id),
     "Import": lambda: legacy.import_page(client, cards, user_id, collection_id),
+    "Checklist Audit": lambda: checklist_audit.render(client, cards, user_id, collection_id),
     "Analytics": lambda: legacy.analytics_page(cards),
     "Database Health": lambda: database_health.render(client, cards),
     "Backup": lambda: legacy.backup_page(cards, collection_name),

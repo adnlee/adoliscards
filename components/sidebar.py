@@ -10,13 +10,13 @@ import streamlit as st
 from utils.database import clear_session, create_collection
 
 
-NAVIGATION = ["Dashboard", "Collection", "Set Progress", "Wishlist", "Purchases", "Add Card", "Import", "Analytics", "Database Health", "Backup"]
-ICONS = {"Dashboard": "⌂", "Collection": "▦", "Set Progress": "◫", "Wishlist": "♡", "Purchases": "◷", "Add Card": "+", "Import": "⇩", "Analytics": "⌁", "Database Health": "✓", "Backup": "⇧"}
+NAVIGATION = ["Dashboard", "Collection", "Set Progress", "Wishlist", "Purchases", "Add Card", "Import", "Checklist Audit", "Analytics", "Database Health", "Backup"]
+ICONS = {"Dashboard": "⌂", "Collection": "▦", "Set Progress": "◫", "Wishlist": "♡", "Purchases": "◷", "Add Card": "+", "Import": "⇩", "Checklist Audit": "≋", "Analytics": "⌁", "Database Health": "✓", "Backup": "⇧"}
 
 
 def sidebar(client: Any, collections: pd.DataFrame, cards_by_collection: dict[str, int], user_id: str) -> tuple[str, str]:
     with st.sidebar:
-        st.markdown('<div class="cv-brand"><b>Card<span>Vault</span></b><small>COLLECTION INTELLIGENCE · 4.0</small></div>', unsafe_allow_html=True)
+        st.markdown('<div class="cv-brand"><b>Card<span>Vault</span></b><small>COLLECTION INTELLIGENCE · 4.2</small></div>', unsafe_allow_html=True)
         names = collections["name"].tolist()
         selected_name = st.selectbox("Active collection", names)
         collection_id = str(collections.loc[collections["name"].eq(selected_name), "id"].iloc[0])

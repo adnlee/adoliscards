@@ -12,6 +12,7 @@ from components.gallery import gallery
 from components.page_title import page_title
 from utils.database import insert_card, upload_image
 from utils.filters import collection_filters
+from utils.filters import searchable_mask
 from utils.imports import normalize_import
 from utils.stats import set_progress
 
@@ -37,8 +38,31 @@ def set_progress_page(client: Any, cards: pd.DataFrame) -> None:
 
 
 def wishlist_page(client: Any, cards: pd.DataFrame) -> None:
-    page_title("Wishlist", "A focused shopping list built from cards marked Need.")
-    gallery(client, collection_filters(cards, need_only=True), columns=3, quick_owned=True)
+    page_title("Need It", "Mobile shopping mode for shows, shops, and online hunts.")
+    needed = cards[~cards.get("status", pd.Series("", index=cards.index)).isin(["Owned", "Incoming", "Not Chasing"])].copy()
+    search = st.text_input("Search Need It", placeholder="Search card number, set, parallel, serial, category, notes…", key="need_it_search")
+    filtered = needed[searchable_mask(needed, search)]
+    quick = st.multiselect("Quick filters", ["Grail", "Dream", "Autograph", "Relic", "Numbered", "Under $10"], placeholder="Tap to narrow the shopping list")
+    category = filtered.get("category", pd.Series("", index=filtered.index)).fillna("").astype(str)
+    priority = filtered.get("priority", pd.Series("", index=filtered.index)).fillna("").astype(str)
+    serial = filtered.get("serial_number", pd.Series("", index=filtered.index)).fillna("").astype(str)
+    for option in quick:
+        if option in {"Grail", "Dream"}:
+            filtered = filtered[priority.loc[filtered.index].str.casefold().eq(option.casefold())]
+        elif option == "Autograph":
+            filtered = filtered[category.loc[filtered.index].str.contains("auto", case=False, regex=False)]
+        elif option == "Relic":
+            filtered = filtered[category.loc[filtered.index].str.contains("relic", case=False, regex=False)]
+        elif option == "Numbered":
+            mask = category.loc[filtered.index].str.contains("number", case=False, regex=False) | serial.loc[filtered.index].str.strip().ne("")
+            filtered = filtered[mask]
+        elif option == "Under $10":
+            prices = pd.to_numeric(filtered.get("estimated_value", 0), errors="coerce").fillna(0)
+            filtered = filtered[prices.le(10)]
+    total_column, result_column = st.columns(2)
+    total_column.metric("Checklist needed", len(needed))
+    result_column.metric("Shopping results", len(filtered))
+    gallery(client, filtered, columns=3, quick_owned=True, all_cards=cards)
 
 
 def purchases_page(client: Any, cards: pd.DataFrame) -> None:
@@ -59,7 +83,7 @@ def add_card_page(client: Any, user_id: str, collection_id: str) -> None:
     page_title("Add Card", "Add a checklist entry or record a new pickup.")
     with st.form("add_card", clear_on_submit=True):
         c1, c2 = st.columns(2)
-        year = c1.number_input("Year", min_value=1900, max_value=2100, value=date.today().year)
+        year = c1.number_input("Year", min_value=2020, max_value=2100, value=date.today().year)
         set_name = c2.text_input("Set *")
         card_number = c1.text_input("Card number")
         card_name = c2.text_input("Card name", value="Adolis García")

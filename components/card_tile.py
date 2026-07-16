@@ -1,8 +1,9 @@
-"""Image-first card tile and complete card-detail editor."""
+"""Image-first card tile, quick actions, and complete detail editor."""
 
 from __future__ import annotations
 
 from datetime import date
+from html import escape
 from typing import Any
 
 import pandas as pd
@@ -12,6 +13,25 @@ from utils.database import signed_url, update_card, upload_image
 from utils.formatting import money, text
 
 STATUS_OPTIONS = ["Need", "Owned", "Incoming", "Not Chasing"]
+CATEGORY_OPTIONS = ["Base", "Parallel", "Insert", "Numbered", "Autograph", "Relic", "Relic/Autograph", "Other"]
+PRIORITY_OPTIONS = ["Core", "High", "Dream", "Grail", "Low"]
+CONDITION_OPTIONS = ["Raw", "Graded", "Authenticated", "Other"]
+
+
+def media_frame_html(image_url: str | None, alt_text: str = "Card front", *, detail: bool = False) -> str:
+    """Render every card image path through one non-cropping media frame."""
+    classes = "cv-card-image-frame cv-detail-image-frame" if detail else "cv-card-image-frame"
+    if image_url:
+        return (
+            f'<div class="{classes}">'
+            f'<img src="{escape(image_url, quote=True)}" alt="{escape(alt_text, quote=True)}" />'
+            '</div>'
+        )
+    return (
+        f'<div class="{classes} cv-card-image-placeholder">'
+        '<div><b>CV</b><span>IMAGE PENDING</span><small>CardVault checklist</small></div>'
+        '</div>'
+    )
 
 
 def _badges(row: pd.Series) -> str:
@@ -25,53 +45,113 @@ def _badges(row: pd.Series) -> str:
     return "".join(f'<span class="cv-pill">{text(value)}</span>' for value in values)
 
 
-def card_tile(client: Any, row: pd.Series, *, compact: bool = False, quick_owned: bool = False) -> None:
+def _choice_index(options: list[str], value: Any) -> int:
+    return options.index(value) if value in options else 0
+
+
+def _date_value(value: Any) -> date | None:
+    if value is None or pd.isna(value) or not str(value).strip():
+        return None
+    try:
+        return pd.to_datetime(value).date()
+    except (TypeError, ValueError):
+        return None
+
+
+def card_tile(client: Any, row: pd.Series, *, compact: bool = False, quick_owned: bool = False, all_cards: pd.DataFrame | None = None) -> None:
     card_id = str(row["id"])
     image = signed_url(client, row.get("image_path"))
-    if image:
-        st.image(image, use_container_width=True)
-    else:
-        st.markdown('<div class="cv-placeholder"><b>CV</b><span>Front image needed</span></div>', unsafe_allow_html=True)
+    alt = f"{row.get('year') or ''} {row.get('set_name') or ''} #{row.get('card_number') or ''}".strip()
+    st.markdown(media_frame_html(image, alt), unsafe_allow_html=True)
     st.markdown(
         f'<div class="cv-tile-copy"><span class="cv-status {text(row.get("status", "Need")).lower().replace(" ", "-")}">{text(row.get("status", "Need"))}</span>'
         f'<h3>{text(row.get("year"))} {text(row.get("set_name"))}</h3>'
-        f'<p>#{text(row.get("card_number"))} · {text(row.get("category"))}</p>{_badges(row)}'
+        f'<p>#{text(row.get("card_number"))} · {text(row.get("category"))}</p><div class="cv-badge-slot">{_badges(row)}</div>'
         f'<div class="cv-price">{money(row.get("estimated_value"))}</div></div>', unsafe_allow_html=True)
-    if quick_owned and row.get("status") != "Owned" and st.button("Mark owned", key=f"own_{card_id}", use_container_width=True):
-        update_card(client, card_id, {"status": "Owned", "date_acquired": date.today().isoformat()})
-        st.rerun()
-    with st.expander("Card details"):
-        card_detail(client, row)
 
-
-def card_detail(client: Any, row: pd.Series) -> None:
-    """Render all stored card fields and safe edits without schema changes."""
-    card_id = str(row["id"])
-    front, back = st.columns(2)
-    front_url = signed_url(client, row.get("image_path"))
-    if front_url:
-        front.image(front_url, caption="Front", use_container_width=True)
+    action_owned, action_favorite = st.columns(2)
+    if row.get("status") != "Owned":
+        label = "✓ Owned" if compact or quick_owned else "Mark Owned"
+        if action_owned.button(label, key=f"own_{card_id}", use_container_width=True):
+            update_card(client, card_id, {"status": "Owned", "date_acquired": date.today().isoformat()})
+            st.rerun()
     else:
-        front.caption("No front image")
-    back.caption("Back image is not present in the current schema.")
-    c1, c2 = st.columns(2)
-    c1.markdown(f"**Year**  \n{text(row.get('year'))}\n\n**Set**  \n{text(row.get('set_name'))}\n\n**Card number**  \n{text(row.get('card_number'))}")
-    c2.markdown(f"**Parallel**  \n{text(row.get('parallel'))}\n\n**Serial number**  \n{text(row.get('serial_number'))}\n\n**Condition / grade**  \n{text(row.get('condition'))} · {text(row.get('grade'))}")
-    with st.form(f"detail_{card_id}"):
-        a, b = st.columns(2)
-        status = a.selectbox("Status", STATUS_OPTIONS, index=STATUS_OPTIONS.index(row.get("status")) if row.get("status") in STATUS_OPTIONS else 0)
-        favorite = b.toggle("Favorite", value=bool(row.get("favorite")))
-        paid = a.number_input("Purchase price", min_value=0.0, value=float(row.get("price_paid") or 0), step=0.25)
-        value = b.number_input("Estimated value", min_value=0.0, value=float(row.get("estimated_value") or 0), step=0.25)
-        storage = st.text_input("Storage", value=str(row.get("storage_location") or ""))
-        notes = st.text_area("Notes", value=str(row.get("notes") or ""))
-        image = st.file_uploader("Replace front image", type=["jpg", "jpeg", "png", "webp"])
-        saved = st.form_submit_button("Save card", use_container_width=True)
-    if saved:
-        image_path = row.get("image_path") or ""
-        if image:
-            image_path = upload_image(client, st.session_state.user_id, image)
-        acquired = row.get("date_acquired") or (date.today().isoformat() if status == "Owned" else None)
-        update_card(client, card_id, {"status": status, "favorite": favorite, "price_paid": paid, "estimated_value": value, "storage_location": storage, "notes": notes, "image_path": image_path, "date_acquired": acquired})
-        st.success("Card saved.")
+        action_owned.caption("✓ Owned")
+    favorite = bool(row.get("favorite"))
+    if action_favorite.button("★" if favorite else "☆", key=f"fav_{card_id}", help="Toggle favorite", use_container_width=True):
+        update_card(client, card_id, {"favorite": not favorite})
         st.rerun()
+
+    with st.expander("Open card"):
+        card_detail(client, row, all_cards=all_cards)
+
+
+def card_detail(client: Any, row: pd.Series, *, all_cards: pd.DataFrame | None = None) -> None:
+    """Edit every existing card field; updates target only the selected row ID."""
+    card_id = str(row["id"])
+    front, facts = st.columns([.85, 1.15])
+    front_url = signed_url(client, row.get("image_path"))
+    front.markdown(media_frame_html(front_url, "Front image", detail=True), unsafe_allow_html=True)
+    facts.markdown(
+        f"### {text(row.get('year'))} {text(row.get('set_name'))}\n"
+        f"**Card:** #{text(row.get('card_number'))}  \n"
+        f"**Parallel:** {text(row.get('parallel'))}  \n"
+        f"**Serial:** {text(row.get('serial_number'))}  \n"
+        f"**Status:** {text(row.get('status'))}  \n"
+        f"**Value:** {money(row.get('estimated_value'))}"
+    )
+
+    with st.form(f"detail_{card_id}"):
+        c1, c2 = st.columns(2)
+        year = c1.number_input("Year", min_value=2020, max_value=2100, value=int(row.get("year") or date.today().year))
+        set_name = c2.text_input("Set", value=str(row.get("set_name") or ""))
+        card_number = c1.text_input("Card number", value=str(row.get("card_number") or ""))
+        card_name = c2.text_input("Card name", value=str(row.get("card_name") or ""))
+        category = c1.selectbox("Category", CATEGORY_OPTIONS, index=_choice_index(CATEGORY_OPTIONS, row.get("category")))
+        parallel = c2.text_input("Parallel", value=str(row.get("parallel") or ""))
+        serial = c1.text_input("Serial number", value=str(row.get("serial_number") or ""))
+        status = c2.selectbox("Status", STATUS_OPTIONS, index=_choice_index(STATUS_OPTIONS, row.get("status")))
+        priority = c1.selectbox("Priority", PRIORITY_OPTIONS, index=_choice_index(PRIORITY_OPTIONS, row.get("priority")))
+        condition = c2.selectbox("Condition", CONDITION_OPTIONS, index=_choice_index(CONDITION_OPTIONS, row.get("condition")))
+        grade = c1.text_input("Grade", value=str(row.get("grade") or ""))
+        seller = c2.text_input("Seller", value=str(row.get("seller") or ""))
+        paid = c1.number_input("Purchase price", min_value=0.0, value=float(row.get("price_paid") or 0), step=0.25)
+        estimated = c2.number_input("Estimated value", min_value=0.0, value=float(row.get("estimated_value") or 0), step=0.25)
+        acquired = c1.date_input("Date acquired", value=_date_value(row.get("date_acquired")), format="MM/DD/YYYY")
+        storage = c2.text_input("Storage location", value=str(row.get("storage_location") or ""))
+        source_url = st.text_input("Checklist source URL", value=str(row.get("source_url") or ""))
+        notes = st.text_area("Notes", value=str(row.get("notes") or ""))
+        favorite = st.toggle("Favorite", value=bool(row.get("favorite")))
+        image = st.file_uploader("Upload or replace front image", type=["jpg", "jpeg", "png", "webp"])
+        saved = st.form_submit_button("Save card details", use_container_width=True)
+    if saved:
+        if not set_name.strip():
+            st.error("Set name cannot be blank.")
+        else:
+            image_path = row.get("image_path") or ""
+            if image:
+                image_path = upload_image(client, st.session_state.user_id, image)
+            if status == "Owned" and acquired is None:
+                acquired = date.today()
+            update_card(client, card_id, {
+                "year": int(year), "set_name": set_name.strip(), "card_number": card_number.strip(),
+                "card_name": card_name.strip(), "category": category, "parallel": parallel.strip(),
+                "serial_number": serial.strip(), "status": status, "priority": priority,
+                "condition": condition, "grade": grade.strip(), "price_paid": paid,
+                "estimated_value": estimated, "date_acquired": acquired.isoformat() if acquired else None,
+                "seller": seller.strip(), "storage_location": storage.strip(), "source_url": source_url.strip(),
+                "favorite": favorite, "notes": notes.strip(), "image_path": image_path,
+            })
+            st.success("Card details saved.")
+            st.rerun()
+
+    if all_cards is not None and not all_cards.empty:
+        related = all_cards[
+            all_cards["year"].eq(row.get("year"))
+            & all_cards["set_name"].fillna("").eq(row.get("set_name"))
+            & all_cards["id"].astype(str).ne(card_id)
+        ].head(6)
+        if not related.empty:
+            st.markdown("#### Related cards")
+            for related_row in related.itertuples():
+                st.caption(f"#{getattr(related_row, 'card_number', '') or '—'} · {getattr(related_row, 'parallel', '') or getattr(related_row, 'category', '') or 'Card'} · {getattr(related_row, 'status', '')}")

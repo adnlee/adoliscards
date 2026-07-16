@@ -108,3 +108,18 @@ def insert_card(client: Client, values: dict[str, Any]) -> None:
 
 def create_collection(client: Client, values: dict[str, Any]) -> None:
     client.table("collections").insert(values).execute()
+
+
+def fetch_staged_cards(client: Client, collection_id: str) -> pd.DataFrame:
+    """Fetch candidate checklist rows isolated from the live cards table."""
+    result = client.table("checklist_staging").select("*").eq("collection_id", collection_id).order("year", desc=True).order("set_name").execute()
+    return pd.DataFrame(result.data or [])
+
+
+def insert_staged_cards(client: Client, records: list[dict[str, Any]]) -> None:
+    for start in range(0, len(records), 100):
+        client.table("checklist_staging").insert(records[start:start + 100]).execute()
+
+
+def update_staged_card(client: Client, staging_id: str, values: dict[str, Any]) -> None:
+    client.table("checklist_staging").update(values).eq("id", staging_id).execute()

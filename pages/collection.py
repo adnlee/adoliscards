@@ -17,9 +17,9 @@ def render(client: Any, cards: pd.DataFrame) -> None:
     header.caption(f"{len(filtered):,} of {len(cards):,} cards")
     mode = mode_column.selectbox("View", ["Gallery", "Compact", "Table"], label_visibility="collapsed")
     if mode == "Gallery":
-        gallery(client, filtered, columns=4)
+        gallery(client, filtered, columns=4, all_cards=cards)
     elif mode == "Compact":
-        gallery(client, filtered, columns=6)
+        gallery(client, filtered, columns=6, all_cards=cards)
     else:
         columns = [column for column in ["year", "set_name", "card_number", "category", "parallel", "serial_number", "status", "price_paid", "estimated_value", "storage_location", "favorite"] if column in filtered]
         st.dataframe(filtered[columns], hide_index=True, use_container_width=True)

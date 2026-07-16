@@ -16,8 +16,14 @@ def normalize_import(df: pd.DataFrame, user_id: str, collection_id: str) -> list
             df[column] = default
     records = []
     for row in df.fillna("").to_dict("records"):
+        try:
+            year = int(row["year"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid year: {row['year']!r}.") from exc
+        if year < 2020:
+            raise ValueError(f"Card year {year} is outside the supported Rangers-era range (2020 or later).")
         records.append({
-            "user_id": user_id, "collection_id": collection_id, "year": int(row["year"]),
+            "user_id": user_id, "collection_id": collection_id, "year": year,
             "set_name": str(row["set_name"]).strip(), "card_number": str(row["card_number"]).strip(),
             "card_name": str(row["card_name"]).strip(), "category": str(row["category"]).strip() or "Base",
             "parallel": str(row["parallel"]).strip(), "serial_number": str(row["serial_number"]).strip(),
